@@ -16,52 +16,73 @@ interface AppShellProps {
 }
 
 export function AppShell({ children }: AppShellProps) {
-    const { isSidebarCollapsed, activeThemeColor } = useUIStore()
-    const [sidebarWidth, setSidebarWidth] = useState(240)
+    const { isSidebarCollapsed } = useUIStore()
+    const [sidebarWidth, setSidebarWidth] = useState(260)
     const [isMounted, setIsMounted] = useState(false)
+    const [isDesktop, setIsDesktop] = useState(false)
 
     useEffect(() => {
         setIsMounted(true)
+
+        // Handle responsive sidebar
+        const checkDesktop = () => {
+            const desktop = window.innerWidth >= 768
+            setIsDesktop(desktop)
+        }
+
+        checkDesktop()
+        window.addEventListener('resize', checkDesktop)
+        return () => window.removeEventListener('resize', checkDesktop)
     }, [])
 
     useEffect(() => {
-        setSidebarWidth(isSidebarCollapsed ? 72 : 240)
+        setSidebarWidth(isSidebarCollapsed ? 80 : 260)
     }, [isSidebarCollapsed])
 
+    // Fix mobile viewport height (100vh issue on iOS)
+    useEffect(() => {
+        const setVH = () => {
+            const vh = window.innerHeight * 0.01
+            document.documentElement.style.setProperty('--vh', `${vh}px`)
+        }
+
+        setVH()
+        window.addEventListener('resize', setVH)
+        window.addEventListener('orientationchange', setVH)
+
+        return () => {
+            window.removeEventListener('resize', setVH)
+            window.removeEventListener('orientationchange', setVH)
+        }
+    }, [])
+
     if (!isMounted) return (
-        <div className="flex min-h-screen bg-background text-white items-center justify-center">
-            {/* Loading shell to prevent hydration mismatch */}
+        <div className="flex min-h-screen bg-black text-white items-center justify-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-white border-t-transparent" />
         </div>
     )
 
     return (
-        <div className="flex min-h-screen bg-background relative overflow-hidden">
-            {/* Ambient Background */}
-            <motion.div
-                className="fixed inset-0 pointer-events-none z-0 opacity-30"
-                animate={{
-                    background: activeThemeColor
-                        ? `radial-gradient(circle at 50% 30%, ${activeThemeColor}, transparent 70%)`
-                        : `radial-gradient(circle at 50% 30%, transparent, transparent 100%)`
-                }}
-                transition={{ duration: 0.8, ease: "easeInOut" }}
-            />
-
-            <div className="z-10 h-full hidden md:block">
+        <div className="flex min-h-screen min-h-[calc(var(--vh,1vh)*100)] bg-black relative overflow-hidden">
+            {/* Desktop Sidebar */}
+            <div className="z-40 h-full hidden md:block">
                 <Sidebar />
             </div>
 
+            {/* Mobile Bottom Nav */}
             <MobileNav />
+
+            {/* Command Palette */}
             <CommandPalette />
 
             {/* Main content area */}
             <motion.main
                 initial={false}
-                animate={{ marginLeft: isMounted && window.innerWidth >= 768 ? sidebarWidth : 0 }}
-                transition={{ duration: 0.2, ease: 'easeInOut' }}
-                className="flex-1 min-h-screen pb-16 md:pb-0"
+                animate={{ marginLeft: isDesktop ? sidebarWidth : 0 }}
+                transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                className="flex-1 min-h-screen min-h-[calc(var(--vh,1vh)*100)] relative z-0"
             >
-                <div className="h-screen overflow-y-auto scrollbar-thin">
+                <div className="h-screen h-[calc(var(--vh,1vh)*100)] overflow-y-auto scrollbar-thin pb-20 md:pb-0">
                     {children}
                 </div>
             </motion.main>

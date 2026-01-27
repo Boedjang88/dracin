@@ -4,7 +4,7 @@ import { useEffect, useState, use } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { Play, Plus, Clock, Share2, Star, Calendar, Check } from 'lucide-react'
+import { Play, Plus, Share2, Star, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useDominantColor } from '@/hooks/use-dominant-color'
 import { cn } from '@/lib/utils'
@@ -46,6 +46,16 @@ export default function DramaPage({ params, isModal = false }: DramaPageProps) {
     // Use dynamic accent color from poster (defaults to white if loading)
     const accentColor = useDominantColor(drama?.posterUrl || '')
 
+    // Set CSS variable for accent color
+    useEffect(() => {
+        if (accentColor) {
+            document.documentElement.style.setProperty('--drama-accent', accentColor)
+        }
+        return () => {
+            document.documentElement.style.removeProperty('--drama-accent')
+        }
+    }, [accentColor])
+
     useEffect(() => {
         async function fetchDrama() {
             try {
@@ -73,6 +83,8 @@ export default function DramaPage({ params, isModal = false }: DramaPageProps) {
 
     if (!drama) return null
 
+    const buttonBgColor = accentColor !== '#ffffff' ? accentColor : 'white'
+
     return (
         <div className={cn(
             "relative overflow-hidden bg-black text-white",
@@ -90,25 +102,27 @@ export default function DramaPage({ params, isModal = false }: DramaPageProps) {
             </div>
 
             <div className="relative -mt-32 px-6 pb-12 sm:px-12">
-                <div className="flex flex-col gap-8 md:flex-row">
-                    {/* Poster */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="flex-shrink-0"
-                    >
-                        <div className="relative aspect-[2/3] w-48 overflow-hidden rounded-lg shadow-2xl sm:w-64">
-                            <Image
-                                src={drama.posterUrl}
-                                alt={drama.title}
-                                fill
-                                className="object-cover"
-                            />
-                        </div>
-                    </motion.div>
+                <div className={cn("flex flex-col gap-8", !isModal && "md:flex-row")}>
+                    {/* Poster - Hide in Modal */}
+                    {!isModal && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="flex-shrink-0"
+                        >
+                            <div className="relative aspect-[2/3] w-48 overflow-hidden rounded-lg shadow-2xl sm:w-64">
+                                <Image
+                                    src={drama.posterUrl}
+                                    alt={drama.title}
+                                    fill
+                                    className="object-cover"
+                                />
+                            </div>
+                        </motion.div>
+                    )}
 
                     {/* Details */}
-                    <div className="flex-1 space-y-6 pt-8 md:pt-32">
+                    <div className={cn("flex-1 space-y-6 pt-8", !isModal && "md:pt-32", isModal && "mt-16")}>
                         <div className="space-y-2">
                             <motion.div
                                 initial={{ opacity: 0 }}
@@ -116,11 +130,7 @@ export default function DramaPage({ params, isModal = false }: DramaPageProps) {
                                 transition={{ delay: 0.1 }}
                                 className="flex flex-wrap gap-2"
                             >
-                                <span
-                                    className="rounded bg-white/20 px-2 py-0.5 text-xs font-semibold backdrop-blur-sm"
-                                    // eslint-disable-next-line react-dom/no-unsafe-read-inline-style
-                                    style={{ color: accentColor }}
-                                >
+                                <span className="rounded bg-white/20 px-2 py-0.5 text-xs font-semibold backdrop-blur-sm text-drama-accent">
                                     {drama.vibe}
                                 </span>
                                 <span className="rounded bg-white/10 px-2 py-0.5 text-xs text-zinc-300">
@@ -155,8 +165,7 @@ export default function DramaPage({ params, isModal = false }: DramaPageProps) {
                                 <Button
                                     size="lg"
                                     className="gap-2 text-black hover:opacity-90 transition-opacity"
-                                    // eslint-disable-next-line react-dom/no-unsafe-read-inline-style
-                                    style={{ backgroundColor: accentColor !== '#ffffff' ? accentColor : 'white' }}
+                                    style={{ backgroundColor: buttonBgColor }}
                                     disabled={!drama.continueWatchingEpisodeId}
                                 >
                                     <Play size={20} fill="currentColor" />
@@ -176,7 +185,7 @@ export default function DramaPage({ params, isModal = false }: DramaPageProps) {
                                 {drama.episodes.map((episode) => (
                                     <Link
                                         key={episode.id}
-                                        href={`/watch/${drama.id}`}
+                                        href={`/watch/${episode.id}`}
                                         className="group flex gap-3 rounded-lg border border-white/5 bg-white/5 p-2 transition-colors hover:border-white/10 hover:bg-white/10"
                                     >
                                         <div className="relative aspect-video w-32 flex-shrink-0 overflow-hidden rounded-md bg-black">

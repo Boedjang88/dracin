@@ -12,6 +12,7 @@ interface Episode {
 interface Drama {
     id: string
     title: string
+    description: string
     episodes: Episode[]
 }
 

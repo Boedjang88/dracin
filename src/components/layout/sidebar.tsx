@@ -14,7 +14,7 @@ import {
     FolderHeart,
     ChevronLeft,
     ChevronRight,
-    Play
+    PlayCircle
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -23,6 +23,7 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { cn } from '@/lib/utils'
 
 interface NavItem {
     name: string
@@ -31,11 +32,11 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-    { name: 'Home', href: '/', icon: <Home size={20} strokeWidth={1.5} /> },
-    { name: 'Browse', href: '/browse', icon: <Compass size={20} strokeWidth={1.5} /> },
-    { name: 'Watchlist', href: '/watchlist', icon: <Bookmark size={20} strokeWidth={1.5} /> },
-    { name: 'History', href: '/history', icon: <History size={20} strokeWidth={1.5} /> },
-    { name: 'Collections', href: '/collections', icon: <FolderHeart size={20} strokeWidth={1.5} /> },
+    { name: 'Home', href: '/', icon: <Home size={20} /> },
+    { name: 'Browse', href: '/browse', icon: <Compass size={20} /> },
+    { name: 'Watchlist', href: '/watchlist', icon: <Bookmark size={20} /> },
+    { name: 'History', href: '/history', icon: <History size={20} /> },
+    { name: 'Collections', href: '/collections', icon: <FolderHeart size={20} /> },
 ]
 
 export function Sidebar() {
@@ -48,32 +49,35 @@ export function Sidebar() {
         setIsMounted(true)
     }, [])
 
-    if (!isMounted) return null // or return a loading/default state to avoid mismatch
+    if (!isMounted) return null
 
     return (
         <TooltipProvider delayDuration={0}>
             <motion.aside
                 initial={false}
-                animate={{ width: isSidebarCollapsed ? 72 : 240 }}
-                transition={{ duration: 0.2, ease: 'easeInOut' }}
-                className="fixed left-0 top-0 z-40 hidden h-screen flex-col border-r border-white/5 bg-black/40 backdrop-blur-xl md:flex"
+                animate={{ width: isSidebarCollapsed ? 80 : 260 }}
+                transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                className={cn(
+                    "fixed left-0 top-0 z-40 hidden h-screen flex-col border-r border-white/5 md:flex",
+                    "glass-heavy backdrop-blur-3xl"
+                )}
             >
                 {/* Logo */}
-                <div className="flex h-14 items-center border-b border-white/5 px-4">
-                    <Link href="/" className="flex items-center gap-2">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10">
-                            <Play size={16} strokeWidth={1.5} className="text-white" fill="currentColor" />
+                <div className="flex h-20 items-center px-6 mb-2">
+                    <Link href="/" className="flex items-center gap-3 group">
+                        <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-red-600 to-red-900 shadow-lg shadow-red-900/20 group-hover:scale-105 transition-transform duration-300">
+                            <PlayCircle size={20} className="text-white fill-white/20" />
                         </div>
                         <AnimatePresence mode="wait">
                             {!isSidebarCollapsed && (
                                 <motion.span
-                                    initial={{ opacity: 0, width: 0 }}
-                                    animate={{ opacity: 1, width: 'auto' }}
-                                    exit={{ opacity: 0, width: 0 }}
-                                    transition={{ duration: 0.15 }}
-                                    className="text-lg font-semibold tracking-tight text-white overflow-hidden whitespace-nowrap"
+                                    initial={{ opacity: 0, x: -10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: -10 }}
+                                    transition={{ duration: 0.2 }}
+                                    className="text-xl font-bold tracking-tight text-white overflow-hidden whitespace-nowrap"
                                 >
-                                    Dracin
+                                    DRACIN
                                 </motion.span>
                             )}
                         </AnimatePresence>
@@ -81,7 +85,7 @@ export function Sidebar() {
                 </div>
 
                 {/* Navigation */}
-                <nav className="flex-1 space-y-1 p-2 overflow-y-auto scrollbar-thin">
+                <nav className="flex-1 space-y-2 p-4 overflow-y-auto scrollbar-none">
                     {navItems.map((item) => {
                         const isActive = pathname === item.href
 
@@ -90,29 +94,46 @@ export function Sidebar() {
                                 <TooltipTrigger asChild>
                                     <Link
                                         href={item.href}
-                                        className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${isActive
-                                            ? 'bg-white/10 text-white'
-                                            : 'text-muted-foreground hover:bg-white/5 hover:text-white'
-                                            }`}
+                                        className={cn(
+                                            "group flex items-center gap-4 rounded-xl px-4 py-3.5 text-sm font-medium transition-all duration-200 relative overflow-hidden",
+                                            isActive
+                                                ? "text-white shadow-lg shadow-black/20"
+                                                : "text-zinc-400 hover:text-white hover:bg-white/5"
+                                        )}
                                     >
-                                        <span className="flex-shrink-0">{item.icon}</span>
+                                        {isActive && (
+                                            <motion.div
+                                                layoutId="sidebar-active"
+                                                className="absolute inset-0 bg-white/10 border border-white/5 rounded-xl"
+                                                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                                            />
+                                        )}
+
+                                        <span className="relative z-10 flex-shrink-0 transition-transform duration-200 group-hover:scale-110">
+                                            {item.icon}
+                                        </span>
+
                                         <AnimatePresence mode="wait">
                                             {!isSidebarCollapsed && (
                                                 <motion.span
                                                     initial={{ opacity: 0, width: 0 }}
                                                     animate={{ opacity: 1, width: 'auto' }}
                                                     exit={{ opacity: 0, width: 0 }}
-                                                    transition={{ duration: 0.15 }}
-                                                    className="overflow-hidden whitespace-nowrap"
+                                                    transition={{ duration: 0.2 }}
+                                                    className="relative z-10 overflow-hidden whitespace-nowrap"
                                                 >
                                                     {item.name}
                                                 </motion.span>
                                             )}
                                         </AnimatePresence>
+
+                                        {isActive && !isSidebarCollapsed && (
+                                            <div className="absolute right-3 w-1.5 h-1.5 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]" />
+                                        )}
                                     </Link>
                                 </TooltipTrigger>
                                 {isSidebarCollapsed && (
-                                    <TooltipContent side="right" className="glass border-subtle">
+                                    <TooltipContent side="right" className="glass border-white/10 text-white ml-2">
                                         {item.name}
                                     </TooltipContent>
                                 )}
@@ -121,82 +142,52 @@ export function Sidebar() {
                     })}
                 </nav>
 
-                {/* Search hint */}
-                <div className="border-t border-subtle p-3">
+                {/* Bottom Actions */}
+                <div className="p-4 space-y-2">
+                    {/* Search */}
                     <AnimatePresence mode="wait">
                         {!isSidebarCollapsed ? (
                             <motion.button
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
-                                transition={{ duration: 0.15 }}
-                                className="flex w-full items-center gap-2 rounded-lg border border-subtle bg-white/5 px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-white/10 hover:text-white"
+                                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-black/20 hover:bg-black/40 border border-white/5 text-zinc-400 group transition-all"
                                 onClick={() => {
-                                    // Trigger command palette
-                                    const event = new KeyboardEvent('keydown', {
-                                        key: 'k',
-                                        metaKey: true,
-                                        bubbles: true
-                                    })
+                                    const event = new KeyboardEvent('keydown', { key: 'k', metaKey: true, bubbles: true })
                                     document.dispatchEvent(event)
                                 }}
                             >
-                                <Search size={16} strokeWidth={1.5} />
-                                <span>Search...</span>
-                                <kbd className="ml-auto flex h-5 items-center gap-0.5 rounded border border-subtle bg-white/5 px-1.5 text-[10px] font-medium">
-                                    <span className="text-xs">⌘</span>K
-                                </kbd>
+                                <Search size={20} />
+                                <span className="text-sm font-medium group-hover:text-white transition-colors">Search</span>
+                                <kbd className="ml-auto text-[10px] font-mono bg-white/5 px-1.5 py-0.5 rounded border border-white/5 text-zinc-500">⌘K</kbd>
                             </motion.button>
                         ) : (
                             <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <motion.button
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        exit={{ opacity: 0 }}
-                                        transition={{ duration: 0.15 }}
-                                        className="flex w-full items-center justify-center rounded-lg border border-subtle bg-white/5 p-2 text-muted-foreground transition-colors hover:bg-white/10 hover:text-white"
+                                    <button
                                         onClick={() => {
-                                            const event = new KeyboardEvent('keydown', {
-                                                key: 'k',
-                                                metaKey: true,
-                                                bubbles: true
-                                            })
+                                            const event = new KeyboardEvent('keydown', { key: 'k', metaKey: true, bubbles: true })
                                             document.dispatchEvent(event)
                                         }}
+                                        className="w-full flex justify-center p-3 rounded-xl bg-black/20 hover:bg-black/40 text-zinc-400 hover:text-white transition-colors"
+                                        aria-label="Search"
                                     >
-                                        <Search size={16} strokeWidth={1.5} />
-                                    </motion.button>
+                                        <Search size={20} />
+                                    </button>
                                 </TooltipTrigger>
-                                <TooltipContent side="right" className="glass border-subtle">
-                                    Search (⌘K)
-                                </TooltipContent>
+                                <TooltipContent side="right" className="glass border-white/10 text-white ml-2">Search ⌘K</TooltipContent>
                             </Tooltip>
                         )}
                     </AnimatePresence>
-                </div>
 
-                {/* Collapse button */}
-                <div className="border-t border-subtle p-2">
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={toggleSidebar}
-                                className="w-full justify-center text-muted-foreground hover:bg-white/5 hover:text-white"
-                            >
-                                {isSidebarCollapsed ? (
-                                    <ChevronRight size={16} strokeWidth={1.5} />
-                                ) : (
-                                    <ChevronLeft size={16} strokeWidth={1.5} />
-                                )}
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent side="right" className="glass border-subtle">
-                            {isSidebarCollapsed ? 'Expand' : 'Collapse'}
-                        </TooltipContent>
-                    </Tooltip>
+                    {/* Collapse Toggle */}
+                    <button
+                        onClick={toggleSidebar}
+                        className="w-full h-8 flex items-center justify-center text-zinc-500 hover:text-white transition-colors mt-2"
+                        aria-label="Toggle sidebar"
+                    >
+                        {isSidebarCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+                    </button>
                 </div>
             </motion.aside>
         </TooltipProvider>

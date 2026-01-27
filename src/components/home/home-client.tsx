@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { DramaGrid, FeaturedHero } from '@/components/home/drama-grid'
-import { DramaGridSkeleton, HeroSkeleton } from '@/components/home/skeleton-loading'
-import { Sparkles, TrendingUp, Clock, Heart } from 'lucide-react'
+import { useState } from 'react'
+import { Sparkles, TrendingUp, Clock, Heart, Swords, Flame } from 'lucide-react'
+import { HeroBillboard } from '@/components/home/hero-billboard'
+import { DramaRow, Top10Row } from '@/components/home/drama-row'
+import { ContinueWatchingRow } from '@/components/home/continue-watching-row'
 
 interface Drama {
     id: string
@@ -23,121 +23,90 @@ interface Drama {
 
 interface HomeClientProps {
     initialDramas: Drama[]
+    history?: any[]
 }
 
-export default function HomeClient({ initialDramas }: HomeClientProps) {
+export default function HomeClient({ initialDramas, history = [] }: HomeClientProps) {
     const [dramas] = useState<Drama[]>(initialDramas)
-    const [isLoading, setIsLoading] = useState(false)
 
-    // In a real app we might fetch more data here or validte initial data
-    // But for now since we pass data from RSC, loading is instant
-
-    const featuredDrama = dramas[0]
-    const trendingDramas = dramas.slice(0, 6)
-    const recentDramas = dramas.slice(0, 6)
+    // Filter dramas by vibe
+    const greenFlagDramas = dramas.filter(d => d.vibe === 'GreenFlag')
+    const heartWrenchingDramas = dramas.filter(d => d.vibe === 'HeartWrenching' || d.vibe === 'ModernRomance')
+    const wuxiaDramas = dramas.filter(d => d.vibe === 'Wuxia')
+    const historicalDramas = dramas.filter(d => d.vibe === 'HistoricalRomance')
 
     return (
-        <div className="min-h-screen p-6 space-y-8">
-            {/* Hero Section */}
-            <section>
-                <AnimatePresence mode="wait">
-                    {isLoading ? (
-                        <HeroSkeleton key="hero-skeleton" />
-                    ) : featuredDrama ? (
-                        <FeaturedHero key="hero" drama={featuredDrama} />
-                    ) : null}
-                </AnimatePresence>
-            </section>
+        <div className="min-h-screen bg-[#0a0a0a] -m-6">
+            {/* Netflix-style Hero Billboard */}
+            <HeroBillboard dramas={dramas} />
 
-            {/* Trending Now */}
-            <section className="space-y-4">
-                <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
-                    className="flex items-center gap-2"
-                >
-                    <TrendingUp size={20} strokeWidth={1.5} className="text-rose-500" />
-                    <h2 className="text-lg font-semibold text-white">Trending Now</h2>
-                </motion.div>
+            {/* Content Rows */}
+            <div className="relative z-10 -mt-32 space-y-10 pb-20">
+                {/* Continue Watching */}
+                {history.length > 0 && (
+                    <ContinueWatchingRow items={history} />
+                )}
 
-                <AnimatePresence mode="wait">
-                    {isLoading ? (
-                        <DramaGridSkeleton key="trending-skeleton" count={6} />
-                    ) : (
-                        <DramaGrid key="trending" dramas={trendingDramas} />
-                    )}
-                </AnimatePresence>
-            </section>
+                {/* Top 10 in Indonesia */}
+                <Top10Row
+                    title="Top 10 Drama Minggu Ini"
+                    dramas={dramas}
+                />
 
-            {/* Green Flag Picks */}
-            <section className="space-y-4">
-                <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 }}
-                    className="flex items-center gap-2"
-                >
-                    <Sparkles size={20} strokeWidth={1.5} className="text-emerald-500" />
-                    <h2 className="text-lg font-semibold text-white">Green Flag Picks</h2>
-                </motion.div>
+                {/* Trending Now */}
+                <DramaRow
+                    title="Trending Now"
+                    dramas={dramas}
+                    icon={<TrendingUp size={20} className="text-rose-500" />}
+                />
 
-                <AnimatePresence mode="wait">
-                    {isLoading ? (
-                        <DramaGridSkeleton key="greenflag-skeleton" count={6} />
-                    ) : (
-                        <DramaGrid
-                            key="greenflag"
-                            dramas={dramas.filter(d => d.vibe === 'GreenFlag').slice(0, 6)}
-                        />
-                    )}
-                </AnimatePresence>
-            </section>
+                {/* Wuxia & Martial Arts - Banner Style */}
+                {wuxiaDramas.length > 0 && (
+                    <DramaRow
+                        title="Epic Wuxia Adventures"
+                        dramas={wuxiaDramas}
+                        variant="banner"
+                        bannerColor="#f97316" // Orange
+                        bannerImage="https://images.unsplash.com/photo-1515548777977-1c390545f94a?q=80&w=2000" // Foggy mountains
+                    />
+                )}
 
-            {/* Recently Added */}
-            <section className="space-y-4">
-                <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4 }}
-                    className="flex items-center gap-2"
-                >
-                    <Clock size={20} strokeWidth={1.5} className="text-blue-500" />
-                    <h2 className="text-lg font-semibold text-white">Recently Added</h2>
-                </motion.div>
+                {/* Heart-Wrenching - Banner Style */}
+                {heartWrenchingDramas.length > 0 && (
+                    <DramaRow
+                        title="Heart-Wrenching Romances"
+                        dramas={heartWrenchingDramas}
+                        variant="banner"
+                        bannerColor="#ec4899" // Pink
+                        bannerImage="https://images.unsplash.com/photo-1518621736915-f3b1c41bfd00?q=80&w=2000" // Cherry blossoms/flowers
+                    />
+                )}
 
-                <AnimatePresence mode="wait">
-                    {isLoading ? (
-                        <DramaGridSkeleton key="recent-skeleton" count={6} />
-                    ) : (
-                        <DramaGrid key="recent" dramas={recentDramas} />
-                    )}
-                </AnimatePresence>
-            </section>
+                {/* Green Flag Picks */}
+                {greenFlagDramas.length > 0 && (
+                    <DramaRow
+                        title="Green Flag Picks"
+                        dramas={greenFlagDramas}
+                        icon={<Sparkles size={20} className="text-emerald-500" />}
+                    />
+                )}
 
-            {/* Heart-Wrenching */}
-            <section className="space-y-4 pb-8">
-                <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.5 }}
-                    className="flex items-center gap-2"
-                >
-                    <Heart size={20} strokeWidth={1.5} className="text-pink-500" />
-                    <h2 className="text-lg font-semibold text-white">Heart-Wrenching Romances</h2>
-                </motion.div>
+                {/* Historical Romance */}
+                {historicalDramas.length > 0 && (
+                    <DramaRow
+                        title="Historical Romance"
+                        dramas={historicalDramas}
+                        icon={<Clock size={20} className="text-amber-500" />}
+                    />
+                )}
 
-                <AnimatePresence mode="wait">
-                    {isLoading ? (
-                        <DramaGridSkeleton key="romance-skeleton" count={6} />
-                    ) : (
-                        <DramaGrid
-                            key="romance"
-                            dramas={dramas.filter(d => d.vibe === 'HeartWrenching' || d.vibe === 'ModernRomance').slice(0, 6)}
-                        />
-                    )}
-                </AnimatePresence>
-            </section>
+                {/* New Releases */}
+                <DramaRow
+                    title="New Releases"
+                    dramas={dramas.slice().reverse()}
+                    icon={<Flame size={20} className="text-red-500" />}
+                />
+            </div>
         </div>
     )
 }

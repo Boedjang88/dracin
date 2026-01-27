@@ -1,6 +1,7 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { AppShell } from "@/components/layout/app-shell";
+import { Providers } from "@/components/providers";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -13,10 +14,33 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: 'cover',
+  themeColor: '#0a0a0a',
+  colorScheme: 'dark',
+}
+
 export const metadata: Metadata = {
   title: "Dracin - Premium Chinese Drama Streaming",
   description: "Discover and stream the best Chinese dramas. From heart-wrenching romances to epic wuxia adventures.",
   keywords: ["Chinese drama", "C-drama", "streaming", "Dracin", "Asian drama"],
+  applicationName: "Dracin",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Dracin',
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  manifest: '/manifest.json',
+  icons: {
+    icon: '/favicon.ico',
+  },
 };
 
 export default function RootLayout({
@@ -27,14 +51,21 @@ export default function RootLayout({
   modal: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className="dark" suppressHydrationWarning>
+      <head>
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <AppShell>
-          {children}
-          {modal}
-        </AppShell>
+        <Providers>
+          <AppShell>
+            {children}
+            {modal}
+          </AppShell>
+        </Providers>
       </body>
     </html>
   );

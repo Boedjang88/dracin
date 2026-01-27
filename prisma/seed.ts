@@ -27,6 +27,23 @@ interface DramaData {
     totalEpisodes: number
 }
 
+// Free sample video URLs for testing
+// These are public domain / creative commons videos
+const TEST_VIDEO_URLS = [
+    'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+    'https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+    'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+    'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
+    'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
+    'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
+    'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
+    'https://storage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4',
+    'https://storage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4',
+    'https://storage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4',
+    'https://storage.googleapis.com/gtv-videos-bucket/sample/VolkswagenGTIReview.mp4',
+    'https://storage.googleapis.com/gtv-videos-bucket/sample/WeAreGoingOnBullrun.mp4',
+]
+
 const dramas: DramaData[] = [
     {
         title: "The Untamed (陈情令)",
@@ -35,10 +52,10 @@ const dramas: DramaData[] = [
         bannerUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1200",
         tags: ["Wuxia", "Fantasy", "Friendship", "Mystery", "Action"],
         cast: [
-            { name: "Xiao Zhan", role: "Wei Wuxian", image: "https://example.com/xiaozhan.jpg" },
-            { name: "Wang Yibo", role: "Lan Wangji", image: "https://example.com/wangyibo.jpg" },
-            { name: "Meng Ziyi", role: "Wen Qing", image: "https://example.com/mengziyi.jpg" },
-            { name: "Xuan Lu", role: "Jiang Yanli", image: "https://example.com/xuanlu.jpg" }
+            { name: "Xiao Zhan", role: "Wei Wuxian" },
+            { name: "Wang Yibo", role: "Lan Wangji" },
+            { name: "Meng Ziyi", role: "Wen Qing" },
+            { name: "Xuan Lu", role: "Jiang Yanli" }
         ],
         vibe: "Wuxia",
         releaseYear: 2019,
@@ -51,9 +68,9 @@ const dramas: DramaData[] = [
         bannerUrl: "https://images.unsplash.com/photo-1516321497487-e288fb19713f?w=1200",
         tags: ["Romance", "Modern", "Gaming", "Campus", "Sweet"],
         cast: [
-            { name: "Yang Yang", role: "Xiao Nai", image: "https://example.com/yangyang.jpg" },
-            { name: "Zheng Shuang", role: "Bei Weiwei", image: "https://example.com/zhengshuang.jpg" },
-            { name: "Mao Xiaotong", role: "Er Xi", image: "https://example.com/maoxiaotong.jpg" }
+            { name: "Yang Yang", role: "Xiao Nai" },
+            { name: "Zheng Shuang", role: "Bei Weiwei" },
+            { name: "Mao Xiaotong", role: "Er Xi" }
         ],
         vibe: "ModernRomance",
         releaseYear: 2016,
@@ -66,10 +83,10 @@ const dramas: DramaData[] = [
         bannerUrl: "https://images.unsplash.com/photo-1547981609-4b6bfe67ca0b?w=1200",
         tags: ["Historical", "Political", "Strategy", "Revenge", "Drama"],
         cast: [
-            { name: "Hu Ge", role: "Mei Changsu / Lin Shu", image: "https://example.com/huge.jpg" },
-            { name: "Liu Tao", role: "Princess Nihuang", image: "https://example.com/liutao.jpg" },
-            { name: "Wang Kai", role: "Prince Jing", image: "https://example.com/wangkai.jpg" },
-            { name: "Wu Lei", role: "Fei Liu", image: "https://example.com/wulei.jpg" }
+            { name: "Hu Ge", role: "Mei Changsu / Lin Shu" },
+            { name: "Liu Tao", role: "Princess Nihuang" },
+            { name: "Wang Kai", role: "Prince Jing" },
+            { name: "Wu Lei", role: "Fei Liu" }
         ],
         vibe: "HistoricalRomance",
         releaseYear: 2015,
@@ -82,9 +99,9 @@ const dramas: DramaData[] = [
         bannerUrl: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1200",
         tags: ["Romance", "Modern", "Gaming", "Aerospace", "Reunion"],
         cast: [
-            { name: "Yang Yang", role: "Yu Tu", image: "https://example.com/yangyang2.jpg" },
-            { name: "Dilraba Dilmurat", role: "Qiao Jingjing", image: "https://example.com/dilraba.jpg" },
-            { name: "Pan Yueming", role: "Zhai Liang", image: "https://example.com/panyueming.jpg" }
+            { name: "Yang Yang", role: "Yu Tu" },
+            { name: "Dilraba Dilmurat", role: "Qiao Jingjing" },
+            { name: "Pan Yueming", role: "Zhai Liang" }
         ],
         vibe: "GreenFlag",
         releaseYear: 2021,
@@ -97,9 +114,9 @@ const dramas: DramaData[] = [
         bannerUrl: "https://images.unsplash.com/photo-1529333166437-7750a6dd5a70?w=1200",
         tags: ["Romance", "Youth", "Secret Crush", "Sweet", "SlowBurn"],
         cast: [
-            { name: "Zhao Lusi", role: "Sang Zhi", image: "https://example.com/zhaolusi.jpg" },
-            { name: "Chen Zheyuan", role: "Duan Jiaxu", image: "https://example.com/chenzheyuan.jpg" },
-            { name: "Victor Ma", role: "Sang Yan", image: "https://example.com/victorma.jpg" }
+            { name: "Zhao Lusi", role: "Sang Zhi" },
+            { name: "Chen Zheyuan", role: "Duan Jiaxu" },
+            { name: "Victor Ma", role: "Sang Yan" }
         ],
         vibe: "HeartWrenching",
         releaseYear: 2023,
@@ -183,10 +200,13 @@ function generateEpisodes(dramaTitle: string, episodeCount: number) {
     for (let i = 1; i <= episodeCount; i++) {
         const duration = baseDuration + Math.floor(Math.random() * 600) - 300 // 40-50 minutes
 
+        // Use rotating test video URLs
+        const videoUrl = TEST_VIDEO_URLS[(i - 1) % TEST_VIDEO_URLS.length]
+
         episodes.push({
             title: titles[i - 1] || `Episode ${i}`,
             thumbnail: `https://picsum.photos/seed/${dramaTitle.replace(/[^a-z0-9]/gi, '')}-ep${i}/300/180`,
-            videoUrl: `https://stream.dracin.app/${dramaTitle.toLowerCase().replace(/[^a-z0-9]/g, '-')}/ep${i.toString().padStart(2, '0')}.m3u8`,
+            videoUrl,
             duration,
             episodeNumber: i
         })
@@ -201,6 +221,7 @@ async function main() {
     // Clear existing data
     console.log('🧹 Clearing existing data...')
     await prisma.watchHistory.deleteMany()
+    await prisma.watchlist.deleteMany()
     await prisma.episode.deleteMany()
     await prisma.drama.deleteMany()
     await prisma.user.deleteMany()
@@ -212,7 +233,7 @@ async function main() {
             email: 'test@dracin.app',
             password: '$2b$10$test-hashed-password', // Placeholder - should use bcrypt in production
             name: 'Test User',
-            avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100'
+            image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100"
         }
     })
     console.log(`  ✓ Created user: ${testUser.email}`)
@@ -253,6 +274,7 @@ async function main() {
     console.log(`   📺 Dramas: ${dramaCount}`)
     console.log(`   🎞️  Episodes: ${episodeCount}`)
     console.log(`   👤 Users: 1`)
+    console.log('\n📹 Using Google sample videos for testing video player')
 }
 
 main()

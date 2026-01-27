@@ -1,16 +1,31 @@
 import { prisma } from '@/lib/prisma'
+import { auth } from '@/lib/auth'
 import { DramaGrid } from '@/components/home/drama-grid'
 import { Bookmark } from 'lucide-react'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
 
 export const dynamic = 'force-dynamic'
 
 export default async function WatchlistPage() {
-    const user = await prisma.user.findFirst()
+    const session = await auth()
+    const user = session?.user
 
-    if (!user) {
+    if (!user?.id) {
         return (
-            <div className="flex h-[50vh] flex-col items-center justify-center gap-4 text-center">
-                <h2 className="text-xl font-semibold text-zinc-400">Please sign in to view your watchlist</h2>
+            <div className="flex h-[80vh] flex-col items-center justify-center gap-6 text-center">
+                <div className="p-4 bg-zinc-900 rounded-full">
+                    <Bookmark size={48} className="text-zinc-500" />
+                </div>
+                <div className="space-y-2">
+                    <h2 className="text-2xl font-bold">Sign in to view your watchlist</h2>
+                    <p className="text-zinc-400">Keep track of shows you want to watch</p>
+                </div>
+                <Link href="/auth">
+                    <Button size="lg" className="font-semibold">
+                        Sign In
+                    </Button>
+                </Link>
             </div>
         )
     }

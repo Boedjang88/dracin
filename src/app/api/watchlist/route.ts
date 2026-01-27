@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { auth } from '@/lib/auth'
 
 export async function POST(request: Request) {
     try {
@@ -12,21 +13,22 @@ export async function POST(request: Request) {
             )
         }
 
-        // Get the test user (in a real app, from session)
-        const user = await prisma.user.findFirst()
+        const session = await auth()
 
-        if (!user) {
+        if (!session?.user?.id) {
             return NextResponse.json(
-                { success: false, error: 'User not found' },
-                { status: 404 }
+                { success: false, error: 'Unauthorized' },
+                { status: 401 }
             )
         }
+
+        const userId = session.user.id
 
         // Check if already in watchlist
         const existing = await prisma.watchlist.findUnique({
             where: {
                 userId_dramaId: {
-                    userId: user.id,
+                    userId,
                     dramaId
                 }
             }
@@ -44,7 +46,7 @@ export async function POST(request: Request) {
             // Add
             await prisma.watchlist.create({
                 data: {
-                    userId: user.id,
+                    userId,
                     dramaId
                 }
             })

@@ -1,36 +1,91 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🐉 Dracin - Premium Chinese Drama Streaming (PWA)
 
-## Getting Started
+**Dracin** is a high-performance, Netflix-style streaming web application built with Next.js 15, specialized for Chinese Dramas (C-Drama). It features a premium glassmorphism UI, interactive hover cards, and a robust authentication system.
 
-First, run the development server:
+![Dracin Hero](/public/manifest-icon-512.png) 
+*(Note: Replace with actual screenshot if available)*
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## ✨ Key Features
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 🎬 Premium User Experience
+- **Netflix-Style Hero Billboard**: Full-width interactive hero section with autoplay video backgrounds, mute controls, and "Ken Burns" zoom effects.
+- **Hover Preview Cards**: Drama posters expand on hover (1.4x scale) to reveal quick stats, match score, rating, and genres—just like Netflix.
+- **Brand Category Banners**: Distinct, immersive headers for special categories (e.g., "Wuxia & Martial Arts" in Orange, "Heart-Wrenching" in Pink).
+- **Glassmorphism UI**: Heavy blur effects (`backdrop-filter`) on sidebars, mobile navigation, and overlay buttons for a modern aesthetic.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 📺 Advanced Video Player
+- **Immersive Playback**: Full-viewport height video player.
+- **Interactive Overlay**: Custom controls that appear on hover.
+- **Slide-Up Info Panel**: Access episode list and drama details without leaving the player.
+- **Smart Navigation**: "Next Episode" and "Previous Episode" buttons appear dynamically on the sides.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 🔐 Authentication & Personalization
+- **Secure Auth**: Powered by NextAuth.js (v5 Beta) with support for Credentials and OAuth (Google/GitHub ready).
+- **Public & Private Routes**: 
+  - **Public**: Home, Browse, and Drama Details are accessible to everyone.
+  - **Private**: Watching content (`/watch/:id`) requires login. Unauthenticated users are redirected to sign-in.
+- **Continue Watching**: Automatically tracks playback progress per user and displays a "Continue Watching" row on the home page.
+- **My List**: Add/remove dramas to your personal watchlist.
 
-## Learn More
+### ⚡ Technical Highlights
+- **Framework**: Next.js 15 (App Router)
+- **Styling**: Tailwind CSS v4, Framer Motion for animations.
+- **Database**: SQLite (via Prisma ORM) for easy local development.
+- **PWA Ready**: Installable on mobile devices with standalone mode support.
+- **Performance**: Optimized images, dynamic imports, and route prefetching.
 
-To learn more about Next.js, take a look at the following resources:
+## 🛠️ Tech Stack
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Framework**: [Next.js 15](https://nextjs.org/)
+- **Language**: [TypeScript](https://www.typescriptlang.org/)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+- **Animation**: [Framer Motion](https://www.framer.com/motion/)
+- **Database**: [SQLite](https://www.sqlite.org/)
+- **ORM**: [Prisma](https://www.prisma.io/)
+- **Auth**: [NextAuth.js (Auth.js)](https://authjs.dev/)
+- **Icons**: [Lucide React](https://lucide.dev/)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🚀 Getting Started
 
-## Deploy on Vercel
+1.  **Clone the repository**
+    ```bash
+    git clone https://github.com/yourusername/dracin.git
+    cd dracin
+    ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+2.  **Install dependencies**
+    ```bash
+    npm install
+    ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+3.  **Setup Environment**
+    Create a `.env` file in the root:
+    ```env
+    DATABASE_URL="file:./dev.db"
+    AUTH_SECRET="your-generated-secret-here" # Run: openssl rand -base64 32
+    ```
+
+4.  **Initialize Database**
+    ```bash
+    npm run db:push
+    npm run db:seed  # Populates initial data
+    ```
+
+5.  **Run Development Server**
+    ```bash
+    npm run dev
+    ```
+
+Open [http://localhost:3000](http://localhost:3000) to view the app.
+
+## 📱 Mobile Support
+Dracin is designed as a **Progressive Web App (PWA)**.
+- **Mobile Navigation**: Bottom tab bar with glassmorphism effect.
+- **Touch Optimized**: Large touch targets for play buttons and cards.
+- **Safe Area Support**: Handles notch and home indicator areas correctly.
+
+## 🤝 Contributing
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## 📄 License
+This project is open-source and available under the MIT License.

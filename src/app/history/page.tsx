@@ -1,7 +1,9 @@
 import { prisma } from '@/lib/prisma'
+import { auth } from '@/lib/auth'
 import Link from 'next/link'
 import Image from 'next/image'
 import { History, Play, Clock } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,12 +19,24 @@ function getProgressPercentage(current: number, total: number) {
 }
 
 export default async function HistoryPage() {
-    const user = await prisma.user.findFirst()
+    const session = await auth()
+    const user = session?.user
 
-    if (!user) {
+    if (!user?.id) {
         return (
-            <div className="flex h-[50vh] flex-col items-center justify-center gap-4 text-center">
-                <h2 className="text-xl font-semibold text-zinc-400">Please sign in to view history</h2>
+            <div className="flex h-[80vh] flex-col items-center justify-center gap-6 text-center">
+                <div className="p-4 bg-zinc-900 rounded-full">
+                    <History size={48} className="text-zinc-500" />
+                </div>
+                <div className="space-y-2">
+                    <h2 className="text-2xl font-bold">Sign in to view history</h2>
+                    <p className="text-zinc-400">Track your watch progress</p>
+                </div>
+                <Link href="/auth">
+                    <Button size="lg" className="font-semibold">
+                        Sign In
+                    </Button>
+                </Link>
             </div>
         )
     }
@@ -79,8 +93,8 @@ export default async function HistoryPage() {
                                     <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/30">
                                         <div
                                             // eslint-disable-next-line react-dom/no-unsafe-read-inline-style
-                                            style={{ width: `${progress}%` }}
-                                            className="h-full bg-red-600"
+                                            style={{ '--progress': `${progress}%` } as React.CSSProperties}
+                                            className="h-full bg-red-600 w-[var(--progress)]"
                                         />
                                     </div>
                                 </div>
