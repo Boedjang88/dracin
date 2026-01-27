@@ -1,6 +1,7 @@
 import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
 import { PrismaClient } from '../src/generated/prisma'
 import path from 'path'
+import bcrypt from 'bcryptjs'
 
 // Create better-sqlite3 adapter with absolute path to dev.db
 const adapter = new PrismaBetterSqlite3({
@@ -228,10 +229,14 @@ async function main() {
 
     // Create test user
     console.log('👤 Creating test user...')
+
+    // Hash password properly for testing: "password123"
+    const hashedPassword = await bcrypt.hash('password123', 10)
+
     const testUser = await prisma.user.create({
         data: {
             email: 'test@dracin.app',
-            password: '$2b$10$test-hashed-password', // Placeholder - should use bcrypt in production
+            password: hashedPassword,
             name: 'Test User',
             image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100"
         }
@@ -275,6 +280,9 @@ async function main() {
     console.log(`   🎞️  Episodes: ${episodeCount}`)
     console.log(`   👤 Users: 1`)
     console.log('\n📹 Using Google sample videos for testing video player')
+    console.log('\n🔑 Test Credentials:')
+    console.log('   Email: test@dracin.app')
+    console.log('   Password: password123')
 }
 
 main()

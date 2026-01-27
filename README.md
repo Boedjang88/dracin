@@ -78,6 +78,33 @@
 
 Open [http://localhost:3000](http://localhost:3000) to view the app.
 
+## 🔑 Test Credentials
+
+The seed script creates a default test user for development:
+
+- **Email**: `test@dracin.app`
+- **Password**: `password123`
+
+You can also create new accounts via the registration page at `/auth`.
+
+## 🛠️ Troubleshooting
+
+### Database Issues
+If you encounter database errors:
+```bash
+# Reset and regenerate database
+npx prisma db push --force-reset
+npm run db:seed
+```
+
+### Build Errors
+```bash
+# Clean install
+rm -rf node_modules .next
+npm install
+npx prisma generate
+```
+
 ## 📱 Mobile Support
 Dracin is designed as a **Progressive Web App (PWA)**.
 - **Mobile Navigation**: Bottom tab bar with glassmorphism effect.
