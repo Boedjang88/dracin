@@ -37,7 +37,39 @@ export default function AuthPage() {
                     router.refresh()
                 }
             } else {
-                setError('Registration temporarily disabled. Please login or use social auth.')
+                const res = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name,
+                        email,
+                        password,
+                    }),
+                })
+
+                const data = await res.json()
+
+                if (!data.success) {
+                    setError(data.error || 'Registration failed')
+                    return
+                }
+
+                // Auto login after successful registration
+                const signInRes = await signIn('credentials', {
+                    email,
+                    password,
+                    redirect: false,
+                })
+
+                if (signInRes?.error) {
+                    setIsLogin(true)
+                    setError('Account created! Please log in.')
+                } else {
+                    router.push('/')
+                    router.refresh()
+                }
             }
         } catch (error) {
             setError('Something went wrong. Please try again.')
