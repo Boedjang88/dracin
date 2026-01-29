@@ -1,82 +1,60 @@
-import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+/**
+ * Drama Detail API Route - BFF Proxy Layer
+ * 
+ * GET /api/dramas/[id]
+ * Returns single drama with episodes from external API
+ */
 
-interface RouteParams {
-    params: Promise<{ id: string }>
-}
+import { NextRequest } from 'next/server'
+import { videoProvider } from '@/lib/services/video-provider'
+import { handleApiError, successResponse, NotFoundError } from '@/lib/api-error'
+import { logger, logApiRequest } from '@/lib/logger'
 
-export async function GET(request: Request, { params }: RouteParams) {
+export async function GET(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    const startTime = Date.now()
+
     try {
+        logApiRequest(request)
+
         const { id } = await params
 
-        const drama = await prisma.drama.findUnique({
-            where: { id },
-            include: {
-                episodes: {
-                    orderBy: { episodeNumber: 'asc' }
-                },
-                _count: {
-                    select: { episodes: true }
-                }
-            }
-        })
+        // Fetch drama and episodes in parallel
+        const [drama, episodes] = await Promise.all([
+            videoProvider.getDramaById(id),
+            videoProvider.getEpisodes(id),
+        ])
 
         if (!drama) {
-            return NextResponse.json(
-                { success: false, error: 'Drama not found' },
-                { status: 404 }
-            )
+            throw new NotFoundError('Drama')
         }
 
-        // Check watchlist and history status
-        const user = await prisma.user.findFirst()
-        let isInWatchlist = false
-        let continueWatchingEpisodeId: string | null = null
-
-        if (user) {
-            // Check watchlist
-            const watchlistEntry = await prisma.watchlist.findUnique({
-                where: {
-                    userId_dramaId: {
-                        userId: user.id,
-                        dramaId: drama.id
-                    }
-                }
-            })
-            isInWatchlist = !!watchlistEntry
-
-            // Check history to find last watched episode
-            const history = await prisma.watchHistory.findFirst({
-                where: {
-                    userId: user.id,
-                    episode: {
-                        dramaId: drama.id
-                    }
-                },
-                orderBy: {
-                    updatedAt: 'desc'
-                }
-            })
-
-            if (history) {
-                continueWatchingEpisodeId = history.episodeId
-            }
-        }
-
-        // If no history, default to first episode
-        if (!continueWatchingEpisodeId && drama.episodes.length > 0) {
-            continueWatchingEpisodeId = drama.episodes[0].id
-        }
-
-        return NextResponse.json({
-            success: true,
-            data: { ...drama, isInWatchlist, continueWatchingEpisodeId }
+        // Log performance
+        const duration = Date.now() - startTime
+        logger.info({
+            type: 'api_response',
+            endpoint: `/api/dramas/${id}`,
+            statusCode: 200,
+            durationMs: duration,
         })
-    } catch (error) {
-        console.error('Error fetching drama:', error)
-        return NextResponse.json(
-            { success: false, error: 'Failed to fetch drama' },
-            { status: 500 }
+
+        // Return with caching headers
+        return successResponse(
+            {
+                ...drama,
+                episodes,
+            },
+            {
+                cache: {
+                    maxAge: 600, // 10 minutes for detail pages
+                    staleWhileRevalidate: 1200,
+                },
+            }
         )
+    } catch (error) {
+        const { id } = await params
+        return handleApiError(error, { endpoint: `/api/dramas/${id}` })
     }
 }

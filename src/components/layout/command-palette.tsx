@@ -48,8 +48,12 @@ export function CommandPalette() {
         fetch('/api/dramas')
             .then(res => res.json())
             .then(data => {
-                if (data.success) {
-                    setDramas(data.data)
+                if (data.success && data.data) {
+                    // Handle paginated response - dramas are in data.data.data
+                    const dramaList = Array.isArray(data.data)
+                        ? data.data
+                        : (data.data.data || [])
+                    setDramas(dramaList)
                 }
             })
             .catch(err => console.error('Failed to load dramas for search', err))

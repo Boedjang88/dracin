@@ -1,120 +1,46 @@
-import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
-import { auth } from '@/lib/auth'
+/**
+ * Legacy Watchlist API Route
+ * 
+ * Redirects to new /api/user/favorites endpoint for backward compatibility
+ */
 
-export async function GET(request: Request) {
-    try {
-        const session = await auth()
+import { NextRequest, NextResponse } from 'next/server'
 
-        if (!session?.user?.id) {
-            return NextResponse.json(
-                { success: false, error: 'Unauthorized' },
-                { status: 401 }
-            )
-        }
-
-        const { searchParams } = new URL(request.url)
-        const page = parseInt(searchParams.get('page') || '1')
-        const limit = parseInt(searchParams.get('limit') || '20')
-        const skip = (page - 1) * limit
-
-        // Fetch watchlist with drama details
-        const [watchlistItems, total] = await Promise.all([
-            prisma.watchlist.findMany({
-                where: { userId: session.user.id },
-                skip,
-                take: limit,
-                orderBy: { createdAt: 'desc' },
-                include: {
-                    drama: {
-                        include: {
-                            _count: {
-                                select: { episodes: true }
-                            }
-                        }
-                    }
-                }
-            }),
-            prisma.watchlist.count({
-                where: { userId: session.user.id }
-            })
-        ])
-
-        return NextResponse.json({
-            success: true,
-            data: watchlistItems.map(item => item.drama),
-            pagination: {
-                page,
-                limit,
-                total,
-                totalPages: Math.ceil(total / limit)
-            }
-        })
-    } catch (error) {
-        console.error('Error fetching watchlist:', error)
-        return NextResponse.json(
-            { success: false, error: 'Failed to fetch watchlist' },
-            { status: 500 }
-        )
-    }
+export async function GET(request: NextRequest) {
+    const baseUrl = new URL(request.url).origin
+    return NextResponse.redirect(`${baseUrl}/api/user/favorites`)
 }
 
-export async function POST(request: Request) {
-    try {
-        const { dramaId } = await request.json()
+export async function POST(request: NextRequest) {
+    // Proxy to new endpoint
+    const baseUrl = new URL(request.url).origin
+    const body = await request.json()
 
-        if (!dramaId) {
-            return NextResponse.json(
-                { success: false, error: 'Drama ID is required' },
-                { status: 400 }
-            )
-        }
+    const res = await fetch(`${baseUrl}/api/user/favorites`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Cookie': request.headers.get('cookie') || '',
+        },
+        body: JSON.stringify(body),
+    })
 
-        const session = await auth()
+    const data = await res.json()
+    return NextResponse.json(data, { status: res.status })
+}
 
-        if (!session?.user?.id) {
-            return NextResponse.json(
-                { success: false, error: 'Unauthorized' },
-                { status: 401 }
-            )
-        }
+export async function DELETE(request: NextRequest) {
+    const baseUrl = new URL(request.url).origin
+    const { searchParams } = new URL(request.url)
+    const dramaId = searchParams.get('dramaId')
 
-        const userId = session.user.id
+    const res = await fetch(`${baseUrl}/api/user/favorites?dramaId=${dramaId}`, {
+        method: 'DELETE',
+        headers: {
+            'Cookie': request.headers.get('cookie') || '',
+        },
+    })
 
-        // Check if already in watchlist
-        const existing = await prisma.watchlist.findUnique({
-            where: {
-                userId_dramaId: {
-                    userId,
-                    dramaId
-                }
-            }
-        })
-
-        if (existing) {
-            // Remove
-            await prisma.watchlist.delete({
-                where: {
-                    id: existing.id
-                }
-            })
-            return NextResponse.json({ success: true, added: false })
-        } else {
-            // Add
-            await prisma.watchlist.create({
-                data: {
-                    userId,
-                    dramaId
-                }
-            })
-            return NextResponse.json({ success: true, added: true })
-        }
-
-    } catch (error) {
-        console.error('Watchlist toggle error:', error)
-        return NextResponse.json(
-            { success: false, error: 'Internal Server Error' },
-            { status: 500 }
-        )
-    }
+    const data = await res.json()
+    return NextResponse.json(data, { status: res.status })
 }

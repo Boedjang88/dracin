@@ -1,29 +1,34 @@
 generator client {
-  provider   = "prisma-client-js"
-  output     = "../src/generated/prisma"
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
   provider = "sqlite"
 }
 
+// ============================================
+// NextAuth Models (Required for authentication)
+// ============================================
+
 model User {
-  id            String          @id @default(cuid())
+  id            String    @id @default(cuid())
   name          String?
-  email         String?         @unique
+  email         String?   @unique
   emailVerified DateTime?
   image         String?
-  accounts      Account[]
-  sessions      Session[]
-  
-  // Custom fields
   password      String?
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
-  
-  // Relations
-  watchHistory  WatchHistory[]
-  watchlist     Watchlist[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // NextAuth relations
+  accounts Account[]
+  sessions Session[]
+
+  // User feature relations
+  userProgress UserProgress[]
+  favorites    Favorites[]
+  watchHistory WatchHistory[]
 }
 
 model Account {
@@ -39,9 +44,8 @@ model Account {
   scope             String?
   id_token          String?
   session_state     String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -53,10 +57,10 @@ model Session {
   sessionToken String   @unique
   userId       String
   expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model VerificationToken {
@@ -67,59 +71,73 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-model Drama {
-  id            String    @id @default(cuid())
-  title         String
-  description   String
-  posterUrl     String
-  bannerUrl     String
-  tags          String    // JSON-encoded array
-  cast          String    // JSON-encoded object
-  vibe          String    // "GreenFlag", "HeartWrenching", "Wuxia", etc.
-  releaseYear   Int?
-  totalEpisodes Int?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  episodes      Episode[]
-  onWatchlists  Watchlist[]
-}
+// ============================================
+// User Feature Models (BFF Architecture)
+// All video data comes from EXTERNAL API only!
+// ============================================
 
-model Watchlist {
-  id        String   @id @default(cuid())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    String
-  drama     Drama    @relation(fields: [dramaId], references: [id], onDelete: Cascade)
-  dramaId   String
-  createdAt DateTime @default(now())
+/// Tracks user's watch progress for continue watching feature
+model UserProgress {
+  id          String   @id @default(cuid())
+  userId      String
+  episodeId   String   // External API episode ID
+  dramaId     String   // External API drama ID
+  currentTime Int      @default(0) // seconds
+  duration    Int      @default(0) // total duration in seconds
+  completed   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  @@unique([userId, dramaId])
-}
-
-model Episode {
-  id            String         @id @default(cuid())
-  title         String
-  thumbnail     String
-  videoUrl      String
-  duration      Int            // in seconds
-  episodeNumber Int
-  drama         Drama          @relation(fields: [dramaId], references: [id], onDelete: Cascade)
-  dramaId       String
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  watchHistory  WatchHistory[]
-
-  @@unique([dramaId, episodeNumber])
-}
-
-model WatchHistory {
-  id           String   @id @default(cuid())
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId       String
-  episode      Episode  @relation(fields: [episodeId], references: [id], onDelete: Cascade)
-  episodeId    String
-  lastPosition Int      @default(0) // in seconds
-  isCompleted  Boolean  @default(false)
-  updatedAt    DateTime @updatedAt
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, episodeId])
+  @@index([userId, updatedAt])
+}
+
+/// User's favorite dramas (My List)
+model Favorites {
+  id        String   @id @default(cuid())
+  userId    String
+  dramaId   String   // External API drama ID
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, dramaId])
+  @@index([userId])
+}
+
+/// Watch history for recommendations and analytics
+model WatchHistory {
+  id          String   @id @default(cuid())
+  userId      String
+  episodeId   String   // External API episode ID
+  dramaId     String   // External API drama ID
+  watchedAt   DateTime @default(now())
+  watchTime   Int      @default(0) // seconds watched in this session
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, watchedAt])
+  @@index([userId, dramaId])
+}
+
+// ============================================
+// Security & Audit Models
+// ============================================
+
+/// Audit log for security events (OWASP compliant)
+/// NEVER store: passwords, JWT, cookies, API keys, tokens, raw emails
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?  // null for failed auth attempts
+  action    String   // login, logout, password_change, failed_auth, sensitive_operation
+  ip        String?
+  userAgent String?
+  metadata  String?  // JSON-encoded context (no sensitive data!)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
 }

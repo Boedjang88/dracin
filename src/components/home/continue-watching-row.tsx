@@ -19,8 +19,8 @@ interface ContinueWatchingItem {
     progress: number
     episodeTitle: string
     episodeNumber: number
-    lastPosition: number
-    duration: number
+    lastPosition?: number
+    duration?: number
 }
 
 interface ContinueWatchingRowProps {

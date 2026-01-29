@@ -1,68 +1,87 @@
-import { prisma } from '@/lib/prisma'
+/**
+ * Collections Page - Uses Video Provider API
+ */
+
+import { videoProvider } from '@/lib/services/video-provider'
 import { DramaGrid } from '@/components/home/drama-grid'
-import { FolderHeart, Sparkles, Swords, Heart, Clock, Laugh, Coffee } from 'lucide-react'
+import { FolderHeart, Sparkles, Swords, Heart, Clock, Laugh, Coffee, Wand2 } from 'lucide-react'
 import Link from 'next/link'
+import type { DramaVibe } from '@/lib/types/video'
 
 export const dynamic = 'force-dynamic'
 
-const collections = [
-    {
-        slug: 'GreenFlag',
-        name: 'Green Flag Picks',
-        icon: Sparkles,
-        color: 'text-emerald-500',
-        description: 'Sweet romances with respectful leads'
-    },
-    {
-        slug: 'Wuxia',
-        name: 'Wuxia & Martial Arts',
-        icon: Swords,
-        color: 'text-orange-500',
-        description: 'Epic martial arts adventures'
-    },
-    {
-        slug: 'HeartWrenching',
-        name: 'Heart-Wrenching',
-        icon: Heart,
-        color: 'text-pink-500',
-        description: 'Emotional stories that tug at your heart'
-    },
-    {
-        slug: 'HistoricalRomance',
-        name: 'Historical Romance',
-        icon: Clock,
-        color: 'text-amber-500',
-        description: 'Love stories set in ancient times'
-    },
-    {
-        slug: 'ModernRomance',
-        name: 'Modern Romance',
-        icon: Coffee,
-        color: 'text-blue-500',
-        description: 'Contemporary love stories'
-    },
-    {
-        slug: 'Comedy',
-        name: 'Comedy',
-        icon: Laugh,
-        color: 'text-yellow-500',
-        description: 'Light-hearted fun and laughs'
-    },
-]
+const collections: Array<{
+    slug: DramaVibe
+    name: string
+    icon: typeof Sparkles
+    color: string
+    description: string
+}> = [
+        {
+            slug: 'GreenFlag',
+            name: 'Green Flag Picks',
+            icon: Sparkles,
+            color: 'text-emerald-500',
+            description: 'Sweet romances with respectful leads'
+        },
+        {
+            slug: 'Wuxia',
+            name: 'Wuxia & Martial Arts',
+            icon: Swords,
+            color: 'text-orange-500',
+            description: 'Epic martial arts adventures'
+        },
+        {
+            slug: 'HeartWrenching',
+            name: 'Heart-Wrenching',
+            icon: Heart,
+            color: 'text-pink-500',
+            description: 'Emotional stories that tug at your heart'
+        },
+        {
+            slug: 'Historical',
+            name: 'Historical Romance',
+            icon: Clock,
+            color: 'text-amber-500',
+            description: 'Love stories set in ancient times'
+        },
+        {
+            slug: 'RomCom',
+            name: 'Rom-Com',
+            icon: Coffee,
+            color: 'text-blue-500',
+            description: 'Light-hearted romantic comedies'
+        },
+        {
+            slug: 'Fantasy',
+            name: 'Fantasy & Xianxia',
+            icon: Wand2,
+            color: 'text-purple-500',
+            description: 'Supernatural worlds and immortal love'
+        },
+        {
+            slug: 'SliceOfLife',
+            name: 'Slice of Life',
+            icon: Laugh,
+            color: 'text-yellow-500',
+            description: 'Everyday stories with heart'
+        },
+    ]
 
 export default async function CollectionsPage() {
-    // Get drama counts per vibe
-    const vibeGroups = await prisma.drama.groupBy({
-        by: ['vibe'],
-        _count: { id: true }
+    // Get all dramas to count by vibe
+    const { data: allDramas } = await videoProvider.getDramas({ limit: 100 })
+
+    // Count dramas per vibe
+    const vibeCounts: Record<string, number> = {}
+    allDramas.forEach((drama) => {
+        if (drama.vibe) {
+            vibeCounts[drama.vibe] = (vibeCounts[drama.vibe] || 0) + 1
+        }
     })
 
-    const vibeCounts = Object.fromEntries(
-        vibeGroups.map(g => [g.vibe, g._count.id])
-    )
-
     return (
-        <div className="min-h-screen p-6 space-y-8">
+        <div className="min-h-screen p-6 pt-24 space-y-8">
             <div className="flex items-center gap-3">
                 <FolderHeart size={28} className="text-white" />
                 <div>
@@ -110,25 +129,23 @@ export default async function CollectionsPage() {
             {/* All Dramas Section */}
             <section className="space-y-4 pt-8">
                 <h2 className="text-xl font-semibold text-white">All Dramas</h2>
-                <AllDramasGrid />
+                <AllDramasGrid dramas={allDramas} />
             </section>
         </div>
     )
 }
 
-async function AllDramasGrid() {
-    const dramas = await prisma.drama.findMany({
-        orderBy: { createdAt: 'desc' },
-        include: {
-            _count: { select: { episodes: true } }
-        }
-    })
-
+function AllDramasGrid({ dramas }: { dramas: Awaited<ReturnType<typeof videoProvider.getDramas>>['data'] }) {
     const formattedDramas = dramas.map(d => ({
-        ...d,
-        tags: JSON.parse(d.tags) as string[],
-        releaseYear: d.releaseYear ?? undefined,
-        totalEpisodes: d.totalEpisodes ?? undefined,
+        id: d.id,
+        title: d.title,
+        description: d.description,
+        posterUrl: d.posterUrl,
+        bannerUrl: d.bannerUrl,
+        tags: d.genres,
+        vibe: d.vibe || 'Modern',
+        releaseYear: d.releaseYear,
+        totalEpisodes: d.totalEpisodes,
     }))
 
     return <DramaGrid dramas={formattedDramas} />

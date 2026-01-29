@@ -1,63 +1,63 @@
-import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+/**
+ * Dramas API Route - BFF Proxy Layer
+ * 
+ * Proxies all drama requests through the server.
+ * Client NEVER calls external video API directly.
+ * 
+ * Features:
+ * - Caching (s-maxage for CDN caching)
+ * - Error masking (client sees generic errors)
+ * - Secure logging (no sensitive data)
+ */
 
-export async function GET(request: Request) {
+import { NextRequest } from 'next/server'
+import { videoProvider } from '@/lib/services/video-provider'
+import { handleApiError, successResponse } from '@/lib/api-error'
+import { logger, logApiRequest } from '@/lib/logger'
+import type { DramaVibe, SearchOptions } from '@/lib/types/video'
+
+export async function GET(request: NextRequest) {
+    const startTime = Date.now()
+
     try {
+        logApiRequest(request)
+
         const { searchParams } = new URL(request.url)
-        const page = parseInt(searchParams.get('page') || '1')
-        const limit = parseInt(searchParams.get('limit') || '10')
-        const vibe = searchParams.get('vibe')
-        const search = searchParams.get('search')
 
-        const skip = (page - 1) * limit
-
-        // Build where clause
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const where: any = {}
-
-        if (vibe) {
-            where.vibe = vibe
+        // Parse query parameters
+        const options: SearchOptions = {
+            page: parseInt(searchParams.get('page') || '1'),
+            limit: Math.min(parseInt(searchParams.get('limit') || '12'), 50), // Cap at 50
+            genre: searchParams.get('genre') || undefined,
+            vibe: (searchParams.get('vibe') as DramaVibe) || undefined,
+            year: searchParams.get('year') ? parseInt(searchParams.get('year')!) : undefined,
+            sortBy: (searchParams.get('sortBy') as 'latest' | 'rating' | 'popularity') || 'latest',
         }
 
-        if (search) {
-            where.OR = [
-                { title: { contains: search, mode: 'insensitive' } },
-                { description: { contains: search, mode: 'insensitive' } },
-                { tags: { hasSome: [search] } }
-            ]
-        }
+        // Fetch from video provider (external API proxy)
+        const result = await videoProvider.getDramas(options)
 
-        // Fetch dramas with pagination
-        const [dramas, total] = await Promise.all([
-            prisma.drama.findMany({
-                where,
-                skip,
-                take: limit,
-                orderBy: { createdAt: 'desc' },
-                include: {
-                    _count: {
-                        select: { episodes: true }
-                    }
-                }
-            }),
-            prisma.drama.count({ where })
-        ])
+        // Log performance
+        const duration = Date.now() - startTime
+        logger.info({
+            type: 'api_response',
+            endpoint: '/api/dramas',
+            statusCode: 200,
+            durationMs: duration,
+            resultCount: result.data.length,
+        })
 
-        return NextResponse.json({
-            success: true,
-            data: dramas,
-            pagination: {
-                page,
-                limit,
-                total,
-                totalPages: Math.ceil(total / limit)
-            }
+        // Return with caching headers
+        return successResponse(result, {
+            cache: {
+                maxAge: 300, // 5 minutes
+                staleWhileRevalidate: 600, // 10 minutes
+            },
         })
     } catch (error) {
-        console.error('Error fetching dramas:', error)
-        return NextResponse.json(
-            { success: false, error: 'Failed to fetch dramas' },
-            { status: 500 }
-        )
+        return handleApiError(error, { endpoint: '/api/dramas' })
     }
 }
+
+// Explicitly allow GET only
+export const dynamic = 'force-dynamic'

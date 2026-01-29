@@ -1,73 +1,82 @@
-import { prisma } from '@/lib/prisma'
+/**
+ * Home Page - Server Component
+ * 
+ * Fetches drama data via API proxy (BFF pattern).
+ * Does NOT directly query Prisma for video data.
+ */
+
 import { auth } from '@/lib/auth'
 import HomeClient from '@/components/home/home-client'
+import { videoProvider } from '@/lib/services/video-provider'
+import { getContinueWatching } from '@/lib/services/recommendations'
+import type { Drama } from '@/lib/types/video'
 
-// Force dynamic since we might have random featured dramas or want fresh data
+// Force dynamic since we have user-specific content
 export const dynamic = 'force-dynamic'
 
-async function getDramas() {
+/**
+ * Fetch dramas from video provider (external API proxy)
+ */
+async function getDramas(): Promise<Drama[]> {
   try {
-    const dramas = await prisma.drama.findMany({
-      orderBy: { createdAt: 'desc' },
-      take: 20,
-      include: {
-        _count: {
-          select: { episodes: true }
-        }
-      }
-    })
-
-    // Parse JSON fields for client component
-    return dramas.map(drama => ({
-      ...drama,
-      tags: JSON.parse(drama.tags) as string[],
-      releaseYear: drama.releaseYear ?? undefined,
-      totalEpisodes: drama.totalEpisodes ?? undefined,
-    }))
+    const result = await videoProvider.getDramas({ limit: 20 })
+    return result.data
   } catch (error) {
     console.error('Failed to fetch dramas:', error)
     return []
   }
 }
 
+/**
+ * Fetch user's continue watching list
+ */
+async function getUserContinueWatching(userId: string) {
+  try {
+    const continueWatching = await getContinueWatching(userId, 10)
+    return continueWatching.map((item) => ({
+      id: item.id,
+      episodeId: item.progress.episodeId,
+      title: item.title,
+      description: item.description,
+      posterUrl: item.posterUrl,
+      bannerUrl: item.bannerUrl,
+      tags: item.genres,
+      vibe: item.vibe || 'Modern',
+      progress: item.progress.percentage,
+      episodeTitle: `Episode ${item.progress.episodeNumber}`,
+      episodeNumber: item.progress.episodeNumber,
+    }))
+  } catch (error) {
+    console.error('Failed to fetch continue watching:', error)
+    return []
+  }
+}
+
 export default async function HomePage() {
+  // Fetch dramas from video provider
   const dramas = await getDramas()
 
-  // Get history
+  // Get user session
   const session = await auth()
-  let history: any[] = []
+  let continueWatching: Awaited<ReturnType<typeof getUserContinueWatching>> = []
 
   if (session?.user?.id) {
-    const rawHistory = await prisma.watchHistory.findMany({
-      where: { userId: session.user.id },
-      take: 10,
-      orderBy: { updatedAt: 'desc' },
-      include: {
-        episode: {
-          include: {
-            drama: true
-          }
-        }
-      }
-    })
-
-    // Format for client
-    history = rawHistory.map(item => ({
-      id: item.episode.drama.id, // Use drama ID for card
-      episodeId: item.episode.id, // Keep episode ID for link
-      title: item.episode.drama.title,
-      description: item.episode.drama.description,
-      posterUrl: item.episode.drama.posterUrl,
-      bannerUrl: item.episode.drama.bannerUrl,
-      tags: JSON.parse(item.episode.drama.tags),
-      vibe: item.episode.drama.vibe,
-      progress: (item.lastPosition / item.episode.duration) * 100,
-      episodeTitle: item.episode.title,
-      episodeNumber: item.episode.episodeNumber,
-      lastPosition: item.lastPosition,
-      duration: item.episode.duration
-    }))
+    continueWatching = await getUserContinueWatching(session.user.id)
   }
 
-  return <HomeClient initialDramas={dramas} history={history} />
+  // Map to client-expected format
+  const clientDramas = dramas.map((drama) => ({
+    id: drama.id,
+    title: drama.title,
+    description: drama.description,
+    posterUrl: drama.posterUrl,
+    bannerUrl: drama.bannerUrl,
+    tags: drama.genres,
+    vibe: drama.vibe || 'Modern',
+    releaseYear: drama.releaseYear,
+    totalEpisodes: drama.totalEpisodes,
+    rating: drama.rating,
+  }))
+
+  return <HomeClient initialDramas={clientDramas} history={continueWatching} />
 }

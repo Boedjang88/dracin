@@ -1,5 +1,10 @@
+/**
+ * Watchlist Page - Uses Favorites API
+ */
+
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/lib/auth'
+import { videoProvider } from '@/lib/services/video-provider'
 import { DramaGrid } from '@/components/home/drama-grid'
 import { Bookmark } from 'lucide-react'
 import Link from 'next/link'
@@ -30,41 +35,47 @@ export default async function WatchlistPage() {
         )
     }
 
-    const watchlist = await prisma.watchlist.findMany({
+    // Get user's favorites from DB (BFF architecture - user data only in DB)
+    const favorites = await prisma.favorites.findMany({
         where: { userId: user.id },
-        include: {
-            drama: {
-                include: {
-                    _count: {
-                        select: { episodes: true }
-                    }
-                }
-            }
-        },
         orderBy: { createdAt: 'desc' }
     })
 
-    const dramas = watchlist.map(item => ({
-        ...item.drama,
-        tags: JSON.parse(item.drama.tags) as string[],
-        releaseYear: item.drama.releaseYear ?? undefined,
-        totalEpisodes: item.drama.totalEpisodes ?? undefined
-    }))
+    // Fetch drama details from video provider for each favorite
+    const dramas = await Promise.all(
+        favorites.map(async (fav) => {
+            const drama = await videoProvider.getDramaById(fav.dramaId)
+            if (!drama) return null
+            return {
+                id: drama.id,
+                title: drama.title,
+                description: drama.description,
+                posterUrl: drama.posterUrl,
+                bannerUrl: drama.bannerUrl,
+                tags: drama.genres,
+                vibe: drama.vibe || 'Modern',
+                releaseYear: drama.releaseYear,
+                totalEpisodes: drama.totalEpisodes,
+            }
+        })
+    )
+
+    const validDramas = dramas.filter((d): d is NonNullable<typeof d> => d !== null)
 
     return (
-        <div className="min-h-screen p-6 space-y-8">
+        <div className="min-h-screen p-6 pt-24 space-y-8">
             <div className="flex items-center gap-2">
                 <Bookmark size={24} className="text-white" />
                 <h1 className="text-2xl font-bold text-white">Your Watchlist</h1>
             </div>
 
-            {dramas.length === 0 ? (
+            {validDramas.length === 0 ? (
                 <div className="flex h-[40vh] flex-col items-center justify-center gap-2 text-zinc-500">
                     <Bookmark size={48} strokeWidth={1} />
                     <p>Your watchlist is empty</p>
                 </div>
             ) : (
-                <DramaGrid dramas={dramas} />
+                <DramaGrid dramas={validDramas} />
             )}
         </div>
     )

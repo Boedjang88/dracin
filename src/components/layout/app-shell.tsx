@@ -2,10 +2,10 @@
 
 import { ReactNode, useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Sidebar } from './sidebar'
-import { useUIStore } from '@/store/ui-store'
-import dynamic from 'next/dynamic'
+import { TopNav } from './top-nav'
 import { MobileNav } from './mobile-nav'
+import dynamic from 'next/dynamic'
+import { PreviewOverlay } from '@/components/ui/preview-card/preview-overlay'
 
 const CommandPalette = dynamic(() => import('./command-palette').then(mod => mod.CommandPalette), {
     ssr: false
@@ -16,31 +16,12 @@ interface AppShellProps {
 }
 
 export function AppShell({ children }: AppShellProps) {
-    const { isSidebarCollapsed } = useUIStore()
-    const [sidebarWidth, setSidebarWidth] = useState(260)
     const [isMounted, setIsMounted] = useState(false)
-    const [isDesktop, setIsDesktop] = useState(false)
 
     useEffect(() => {
         setIsMounted(true)
 
-        // Handle responsive sidebar
-        const checkDesktop = () => {
-            const desktop = window.innerWidth >= 768
-            setIsDesktop(desktop)
-        }
-
-        checkDesktop()
-        window.addEventListener('resize', checkDesktop)
-        return () => window.removeEventListener('resize', checkDesktop)
-    }, [])
-
-    useEffect(() => {
-        setSidebarWidth(isSidebarCollapsed ? 80 : 260)
-    }, [isSidebarCollapsed])
-
-    // Fix mobile viewport height (100vh issue on iOS)
-    useEffect(() => {
+        // Fix mobile viewport height
         const setVH = () => {
             const vh = window.innerHeight * 0.01
             document.documentElement.style.setProperty('--vh', `${vh}px`)
@@ -63,29 +44,28 @@ export function AppShell({ children }: AppShellProps) {
     )
 
     return (
-        <div className="flex min-h-screen min-h-[calc(var(--vh,1vh)*100)] bg-black relative overflow-hidden">
-            {/* Desktop Sidebar */}
-            <div className="z-40 h-full hidden md:block">
-                <Sidebar />
+        <div className="min-h-screen min-h-[calc(var(--vh,1vh)*100)] bg-black relative">
+            {/* Top Navigation (Desktop & Tablet) */}
+            <div className="hidden md:block">
+                <TopNav />
             </div>
 
             {/* Mobile Bottom Nav */}
+            <div className="md:hidden">
+                <TopNav /> {/* Reuse TopNav for mobile top bar (logo/search) too? Or keep it specific */}
+            </div>
             <MobileNav />
 
-            {/* Command Palette */}
+            {/* Command Palette (Still available via shortcut) */}
             <CommandPalette />
 
+            {/* Global Preview Overlay (Portal-like) */}
+            <PreviewOverlay />
+
             {/* Main content area */}
-            <motion.main
-                initial={false}
-                animate={{ marginLeft: isDesktop ? sidebarWidth : 0 }}
-                transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-                className="flex-1 min-h-screen min-h-[calc(var(--vh,1vh)*100)] relative z-0"
-            >
-                <div className="h-screen h-[calc(var(--vh,1vh)*100)] overflow-y-auto scrollbar-thin pb-20 md:pb-0">
-                    {children}
-                </div>
-            </motion.main>
+            <main className="min-h-screen w-full relative z-0">
+                {children}
+            </main>
         </div>
     )
 }

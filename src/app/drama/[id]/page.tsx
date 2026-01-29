@@ -233,16 +233,24 @@ function WatchlistButton({ dramaId, initialInWatchlist }: { dramaId: string, ini
         setIsLoading(true)
 
         try {
-            const res = await fetch('/api/watchlist', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ dramaId })
-            })
-
-            if (!res.ok) {
-                // Revert if failed
-                setIsInWatchlist(!newState)
-                console.error('Failed to toggle watchlist')
+            if (newState) {
+                // Add to favorites
+                const res = await fetch('/api/user/favorites', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ dramaId })
+                })
+                if (!res.ok) {
+                    setIsInWatchlist(!newState)
+                }
+            } else {
+                // Remove from favorites
+                const res = await fetch(`/api/user/favorites?dramaId=${dramaId}`, {
+                    method: 'DELETE'
+                })
+                if (!res.ok) {
+                    setIsInWatchlist(!newState)
+                }
             }
         } catch (error) {
             setIsInWatchlist(!newState)

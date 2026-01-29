@@ -47,7 +47,7 @@ export function HeroBillboard({ dramas }: HeroBillboardProps) {
     useEffect(() => {
         if (isHovered) return
 
-        const interval = setInterval(goToNext, 10000)
+        const interval = setInterval(goToNext, 5000)
         return () => clearInterval(interval)
     }, [isHovered, goToNext])
 

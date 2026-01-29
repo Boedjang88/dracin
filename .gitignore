@@ -23,6 +23,7 @@
 # misc
 .DS_Store
 *.pem
+Thumbs.db
 
 # debug
 npm-debug.log*
@@ -31,8 +32,13 @@ yarn-error.log*
 .pnpm-debug.log*
 build_error.log
 
-# env files (can opt-in for committing if needed)
+# env files
 .env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
 # vercel
 .vercel
 
@@ -40,8 +46,21 @@ build_error.log
 *.tsbuildinfo
 next-env.d.ts
 
+# prisma generated
 /src/generated/prisma
 
-# sqlite
+# sqlite database
 *.db
 *.db-journal
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.Spotlight-V100
+.Trashes
+
