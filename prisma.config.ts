@@ -2,7 +2,6 @@
 // npm install --save-dev prisma dotenv
 import "dotenv/config";
 import { defineConfig } from "prisma/config";
-import path from "path";
 
 export default defineConfig({
   schema: "prisma/schema.prisma",
@@ -10,6 +9,8 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    url: `file:${path.join(__dirname, "prisma", "dev.db")}`,
+    // Use DIRECT_URL for migrations (bypasses pgBouncer)
+    // Use DATABASE_URL for runtime (with pgBouncer)
+    url: process.env.DIRECT_URL || process.env.DATABASE_URL,
   },
 });

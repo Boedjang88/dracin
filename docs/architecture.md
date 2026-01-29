@@ -145,7 +145,7 @@ Client (Browser)
          │                                  │
          ▼                                  ▼
 ┌─────────────────────────┐     ┌─────────────────────────┐
-│   External Video API    │     │   SQLite / PostgreSQL   │
+│   External Video API    │     │   PostgreSQL (Supabase) │
 │   (Content Source)      │     │   (User Data)           │
 └─────────────────────────┘     └─────────────────────────┘
 ```

@@ -112,8 +112,8 @@ cp .env.example .env
 Open `.env` in your editor. You'll see:
 
 ```env
-# Database connection
-DATABASE_URL="file:./dev.db"
+# Database connection (Supabase PostgreSQL)
+DATABASE_URL="postgresql://postgres.[project-ref]:[password]@aws-0-[region].pooler.supabase.com:6543/postgres?pgbouncer=true"
 
 # Authentication secret (IMPORTANT: change this!)
 AUTH_SECRET="replace_with_your_secure_random_string"
@@ -257,15 +257,13 @@ dracin/
 
 ### Database Options
 
-**Development (SQLite - default):**
+**Production (Supabase PostgreSQL - recommended):**
 ```env
-DATABASE_URL="file:./dev.db"
+DATABASE_URL="postgresql://postgres.[project-ref]:[password]@aws-0-[region].pooler.supabase.com:6543/postgres?pgbouncer=true"
+DIRECT_URL="postgresql://postgres.[project-ref]:[password]@aws-0-[region].pooler.supabase.com:5432/postgres"
 ```
 
-**Production (PostgreSQL):**
-```env
-DATABASE_URL="postgresql://user:password@host:5432/dracin"
-```
+Get these from your Supabase project: **Settings > Database > Connection String**
 
 ---
 

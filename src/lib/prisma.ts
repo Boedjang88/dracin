@@ -1,15 +1,20 @@
-import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
+import { PrismaPg } from '@prisma/adapter-pg'
 import { PrismaClient } from '@/generated/prisma'
-import path from 'path'
+import { Pool } from 'pg'
 
 declare global {
     var prisma: PrismaClient | undefined
 }
 
-const dbPath = path.join(process.cwd(), 'prisma/dev.db')
-const adapter = new PrismaBetterSqlite3({
-    url: dbPath
+// Create PostgreSQL connection pool for Supabase
+const connectionString = process.env.DATABASE_URL!
+
+const pool = new Pool({
+    connectionString,
+    max: 10, // Maximum number of connections in the pool
 })
+
+const adapter = new PrismaPg(pool)
 
 export const prisma = globalThis.prisma ?? new PrismaClient({ adapter })
 
